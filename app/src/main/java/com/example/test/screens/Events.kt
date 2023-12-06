@@ -1,5 +1,6 @@
 package com.example.test.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,9 +29,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.ImagePainter
+import coil.compose.rememberImagePainter
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.security.AllPermission
 
@@ -64,7 +70,7 @@ fun EventCard(event: Event) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-            elevation = CardDefaults.cardElevation(8.dp)
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Column(
             modifier = Modifier
@@ -73,11 +79,27 @@ fun EventCard(event: Event) {
         ) {
             Text(text = event.title, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = event.description, fontSize = 16.sp)
+
+            // Описание события с ограничением в две строки
+            Text(
+                text = event.description,
+                fontSize = 16.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
-            // Загружаем изображение
-            AsyncImage(
-                model = event.image,
+
+            // Use Coil to load images
+            val painter = rememberImagePainter(
+                data = event.image,
+                builder = {
+                    crossfade(true)
+                }
+            )
+
+            Image(
+                painter = painter,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -86,11 +108,21 @@ fun EventCard(event: Event) {
                     .clip(shape = MaterialTheme.shapes.medium)
             )
 
+            // Handle loading and error states
+            when {
+                painter.state is AsyncImagePainter.State.Loading -> {
+                    // You can show a loading indicator here if needed
+                }
+                painter.state is AsyncImagePainter.State.Error -> {
+                    // You can show an error placeholder here if needed
+                }
+            }
         }
     }
 }
 
 // Модель данных для события
+@Serializable
 data class Event(
     val title: String,
     val description: String,
@@ -102,19 +134,19 @@ fun loadEvents(): List<Event> {
     val jsonString = """
         [
           {
-            "title": "Событие 1",
-            "description": "Описание события 1",
-            "image": "https://coil-kt.github.io/coil/logo.svg"
+            "title": "Культовая GTA снова возвращается.",
+            "description": "Студия Rockstar Games представила следующую часть серии Grand Theft Auto. Трейлер GTA VI выложили на YouTube-канал разработчиков.",
+            "image": "https://virtus-img.cdnvideo.ru/images/material-card/plain/c5/c573f42d-0078-4048-9239-20cbaf6e8073.webp"
           },
           {
             "title": "Событие 2",
             "description": "Описание события 2",
-            "image": "https://coil-kt.github.io/coil/logo.svg"
+            "image": "https://habrastorage.org/webt/61/85/0f/61850f212acd6264540097.png"
           },
           {
             "title": "Событие 3",
             "description": "Описание события 3",
-            "image": "https://coil-kt.github.io/coil/logo.svg"
+            "image": "https://habrastorage.org/webt/61/85/0f/61850f212acd6264540097.png"
           }
         ]
     """.trimIndent()
