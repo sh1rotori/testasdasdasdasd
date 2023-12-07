@@ -54,6 +54,7 @@ dependencies {
     //Navigation Compose
     val nav_version = "2.7.5"
 
+
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
