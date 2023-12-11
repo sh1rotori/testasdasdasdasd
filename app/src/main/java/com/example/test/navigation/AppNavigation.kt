@@ -1,5 +1,6 @@
 package com.example.test.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -8,17 +9,24 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.Navigation
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.test.screens.Event
+import com.example.test.screens.EventDetailsScreen
+import com.example.test.screens.EventViewModel
 import com.example.test.screens.EventsScreen
 import com.example.test.screens.RecordsScreen
 import com.example.test.screens.TicketsScreen
+import com.example.test.screens.readEventsData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,22 +63,49 @@ fun AppNavigation() {
                 }
             }
         }
-    ) {paddingValues ->  
+    ) {paddingValues ->
         NavHost(
             navController = navController,
             startDestination = Screens.EventsScreen.name,
             modifier = Modifier
                 .padding(paddingValues)
             ){
-            composable(route = Screens.EventsScreen.name){
-                EventsScreen()
+            composable(route = Screens.EventsScreen.name) {
+                val eventViewModel: EventViewModel = viewModel()
+                EventsScreen(eventViewModel) { selectedEvent ->
+                    // Log the selected eventId to check if it's correct
+                    Log.d("EventDetailsScreen", "Selected EventId: $selectedEvent")
+
+                    // Handle the event click and navigate to EventDetailsScreen with eventId parameter
+                    navController.navigate("${Screens.EventDetailsScreen.name}/${selectedEvent.eventId}")
+
+                }
             }
+
             composable(route = Screens.TicketsScreen.name){
                 TicketsScreen()
             }
             composable(route = Screens.RecordsScreen.name){
                 RecordsScreen()
             }
+            val eventsData: List<Event> = readEventsData()
+
+            composable(route = Screens.EventDetailsScreen.name + "/{eventId}") { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId")
+                val event = readEventsData().find { it.eventId == eventId }
+
+                if (event != null) {
+                    EventDetailsScreen(event = event) {
+                        // Handle any interaction or back navigation from EventDetailsScreen
+                    }
+                } else {
+                    // Display an error message or navigate back
+                    Text("Событие не найдено")
+                }
+            }
+
+
+
         }
     }
 }
