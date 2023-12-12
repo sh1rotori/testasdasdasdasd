@@ -125,6 +125,8 @@ fun EventDetailsScreen(event: Event?, onClick: () -> Unit) {
             val thumbWidthPx = with(LocalDensity.current) { thumbWidthDp.toPx() }
             val thumbSpacingPx = with(LocalDensity.current) { thumbSpacingDp.toPx() }
 
+
+
             Image(
                 painter = rememberAsyncImagePainter(model = event.eventPictures.first()),
                 contentDescription = "Large Image",
@@ -152,6 +154,7 @@ fun EventDetailsScreen(event: Event?, onClick: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun FullImageDialog(imageUrl: String?, onDismiss: () -> Unit) {
     if (imageUrl == null) {

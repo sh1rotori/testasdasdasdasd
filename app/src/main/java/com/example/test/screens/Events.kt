@@ -49,6 +49,15 @@ class EventViewModel : ViewModel() {
     fun setSelectedEvent(event: Event) {
         _selectedEvent.value = event
     }
+    fun updateReadStatus(eventId: String) {
+        _selectedEvent.value?.let { event ->
+            if (event.eventId == eventId) {
+                event.eventReadStatus = true
+                _selectedEvent.value = event.copy() // Обновляем объект, чтобы уведомить Flow
+            }
+        }
+    }
+
 }
 
 @Composable
@@ -72,12 +81,6 @@ fun EventsScreen(eventViewModel: EventViewModel, onEventClick: (Event) -> Unit) 
         EventFilter.Read -> eventsData.filter { it.eventReadStatus }
     }
 
-    // Function to update the read status of an event
-    fun updateReadStatus(eventId: String) {
-        eventsList.find { it.eventId == eventId }?.let {
-            it.eventReadStatus = true
-        }
-    }
 
     // UI for the Events Screen
     // UI for the Events Screen
@@ -122,10 +125,15 @@ fun EventsScreen(eventViewModel: EventViewModel, onEventClick: (Event) -> Unit) 
             ) {
                 items(filteredEvents) { event ->
                     EventListItem(event) {
+                        // Обработка события прочтения
+                        event?.let {
+                            if (!it.eventReadStatus) {
+                                eventViewModel.updateReadStatus(it.eventId)
+                            }
+                        }
                         eventViewModel.setSelectedEvent(event)
                         onEventClick(event)
                         // Handle item click
-                        updateReadStatus(event.eventId)
                     }
                 }
             }
