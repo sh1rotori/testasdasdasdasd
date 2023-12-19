@@ -55,6 +55,10 @@ dependencies {
     val nav_version = "2.7.5"
 
     implementation("androidx.navigation:navigation-compose:$nav_version")
+    implementation ("androidx.fragment:fragment-ktx:1.6.2")
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.2")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
 

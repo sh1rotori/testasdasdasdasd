@@ -4,5 +4,6 @@ enum class Screens {
     EventsScreen,
     RecordsScreen,
     TicketsScreen,
-    EventDetailsScreen
+    EventDetailsScreen,
+    CreateTicketScreen
 }

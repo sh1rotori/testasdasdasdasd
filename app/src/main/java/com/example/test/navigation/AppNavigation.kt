@@ -9,29 +9,38 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.Navigation
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.test.screens.CreateTicketScreen
 import com.example.test.screens.Event
 import com.example.test.screens.EventDetailsScreen
 import com.example.test.screens.EventViewModel
 import com.example.test.screens.EventsScreen
 import com.example.test.screens.RecordsScreen
+import com.example.test.screens.TicketViewModel
 import com.example.test.screens.TicketsScreen
 import com.example.test.screens.readEventsData
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.fragment.app.activityViewModels
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    val eventViewModel = remember { EventViewModel() }
+    val ticketViewModel = remember { TicketViewModel() }
 
     Scaffold(
         bottomBar = {
@@ -82,9 +91,10 @@ fun AppNavigation() {
                 }
             }
 
-            composable(route = Screens.TicketsScreen.name){
-                TicketsScreen()
+            composable(route = Screens.TicketsScreen.name) {
+                TicketsScreen(navController = navController, ticketViewModel = ticketViewModel)
             }
+
             composable(route = Screens.RecordsScreen.name){
                 RecordsScreen()
             }
@@ -105,7 +115,9 @@ fun AppNavigation() {
             }
 
 
-
+            composable(route = Screens.CreateTicketScreen.name) {
+                CreateTicketScreen(navController = navController, ticketViewModel = ticketViewModel)
+            }
         }
     }
 }
