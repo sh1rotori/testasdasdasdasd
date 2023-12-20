@@ -31,7 +31,7 @@ import com.example.test.screens.readEventsData
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.fragment.app.activityViewModels
-
+import com.example.test.screens.TicketDetailsScreen
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,18 +52,19 @@ fun AppNavigation() {
                     NavigationBarItem(
                         selected = currentDestination?.hierarchy?.any { it.route == navItem.route } == true,
                         onClick = {
-                                  navController.navigate(navItem.route){
-                                      popUpTo(navController.graph.findStartDestination().id){
-                                          saveState = true
-                                      }
-                                      launchSingleTop = true
-                                      restoreState = true
-                                  }
+                            navController.navigate(navItem.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         },
                         icon = {
-                               Icon(
-                                   imageVector = navItem.icon,
-                                   contentDescription = null)
+                            Icon(
+                                imageVector = navItem.icon,
+                                contentDescription = null
+                            )
                         },
                         label = {
                             Text(text = navItem.label)
@@ -72,13 +73,13 @@ fun AppNavigation() {
                 }
             }
         }
-    ) {paddingValues ->
+    ) { paddingValues ->
         NavHost(
             navController = navController,
             startDestination = Screens.EventsScreen.name,
             modifier = Modifier
                 .padding(paddingValues)
-            ){
+        ) {
             composable(route = Screens.EventsScreen.name) {
                 val eventViewModel: EventViewModel = viewModel()
                 EventsScreen(eventViewModel) { selectedEvent ->
@@ -95,7 +96,7 @@ fun AppNavigation() {
                 TicketsScreen(navController = navController, ticketViewModel = ticketViewModel)
             }
 
-            composable(route = Screens.RecordsScreen.name){
+            composable(route = Screens.RecordsScreen.name) {
                 RecordsScreen()
             }
             val eventsData: List<Event> = readEventsData()
@@ -117,6 +118,24 @@ fun AppNavigation() {
 
             composable(route = Screens.CreateTicketScreen.name) {
                 CreateTicketScreen(navController = navController, ticketViewModel = ticketViewModel)
+            }
+
+            composable(route = Screens.TicketDetailsScreen.name + "/{ticketId}") { backStackEntry ->
+                val ticketId = backStackEntry.arguments?.getString("ticketId")
+                val ticket = ticketViewModel.tickets.find { it.id == ticketId }
+
+                if (ticket != null) {
+                    TicketDetailsScreen(
+                        ticket = ticket,
+                        onSaveImageClick = {
+                            // Логика сохранения изображения в галерее
+                            // Показать системное уведомление об успешном сохранении
+                        }
+                    )
+                } else {
+                    // Обработка ситуации, когда билет не найден
+                    Text("Билет не найден")
+                }
             }
         }
     }

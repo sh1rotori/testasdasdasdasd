@@ -39,14 +39,13 @@ import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import kotlin.random.Random
 
+// CreateTicketScreen.kt
 @OptIn(ExperimentalMaterial3Api::class)
-
 @Composable
 fun CreateTicketScreen(navController: NavController, ticketViewModel: TicketViewModel) {
-    var selectedEventType by remember { mutableStateOf("Церемония открытия") }
+    var selectedEventType by remember { mutableStateOf(EventType.OPENING_CEREMONY) }
     var userName by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-
     val context = LocalContext.current
 
     // Создаем лаунчер для получения результатов из галереи
@@ -103,7 +102,7 @@ fun CreateTicketScreen(navController: NavController, ticketViewModel: TicketView
         // Область предварительного просмотра
         if (selectedImageUri != null) {
             Image(
-                painter = rememberImagePainter(selectedImageUri),
+                painter = rememberAsyncImagePainter(selectedImageUri),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -145,26 +144,24 @@ fun CreateTicketScreen(navController: NavController, ticketViewModel: TicketView
                 }
             }
         }
+        // Многоразовый RadioGroup
         RadioGroup(
-            options = listOf("Церемония открытия", "Церемония закрытия"),
-            selectedOption = selectedEventType,
-            onOptionSelected = { selectedEventType = it }
+            options = listOf("OPENING_CEREMONY", "CLOSING_CEREMONY"),
+            selectedOption = selectedEventType.name,
+            onOptionSelected = { selectedEventType = EventType.valueOf(it) }
         )
 
-        // Кнопка создания билета
+
         Button(
             onClick = {
-                // Создание билета
                 val newTicket = Ticket(
-                    id = Random.nextInt(),
-                    title = "Билет для $userName",
+                    title = "$userName",
                     type = selectedEventType,
+                    imageUri = selectedImageUri,
+                    seatLocation = generateRandomPlace() // Генерируем место сидения
                     // Другие свойства билета
                 )
-                // Добавление билета в список через ViewModel
                 ticketViewModel.addTicket(newTicket)
-
-                // Переход на предыдущий экран
                 navController.popBackStack()
                 Log.d("CreateTicketScreen", "Navigating back after creating ticket: $newTicket")
             },
@@ -175,4 +172,12 @@ fun CreateTicketScreen(navController: NavController, ticketViewModel: TicketView
             Text("Создать")
         }
     }
+
+}
+// Вспомогательная функция для генерации случайного места
+fun generateRandomPlace(): String {
+    val row = ('A'..'C').random().toString()
+    val seat = (1..10).random().toString()
+    val column = (1..10).random().toString()
+    return "$row$seat Строка$column Столбец $column"
 }
