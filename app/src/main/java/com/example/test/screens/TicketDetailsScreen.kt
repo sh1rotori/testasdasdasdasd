@@ -1,12 +1,19 @@
 package com.example.test.screens
 
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.fonts.FontFamily
 import android.net.Uri
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.view.View
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -52,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
+import java.io.OutputStream
 
 
 @Composable
@@ -59,6 +67,19 @@ fun TicketDetailsScreen(ticket: Ticket, onSaveImageClick: () -> Unit) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Permission launcher for WRITE_EXTERNAL_STORAGE
+    val requestPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                saveTicketDetailsAsImage(context) { imageUri ->
+                    // Callback when the image is saved
+                    capturedImageUri = imageUri
+                }
+            } else {
+                // Handle the case when permission is not granted
+            }
+        }
 
     // Outermost container
     Column(
@@ -70,7 +91,17 @@ fun TicketDetailsScreen(ticket: Ticket, onSaveImageClick: () -> Unit) {
         Button(
             onClick = {
                 coroutineScope.launch {
-
+                    // Check and request permission to write to external storage
+                    if (context.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                        android.content.pm.PackageManager.PERMISSION_GRANTED
+                    ) {
+                        saveTicketDetailsAsImage(context) { imageUri ->
+                            // Callback when the image is saved
+                            capturedImageUri = imageUri
+                        }
+                    } else {
+                        requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
                 }
             },
             modifier = Modifier
@@ -94,7 +125,7 @@ fun TicketDetailsScreen(ticket: Ticket, onSaveImageClick: () -> Unit) {
             ) {
                 // Тип билета
                 Text(
-                    text = "Тип билета: ${ticket.type.name}",
+                    text = "Тип билета: ${ticket.title}",
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -155,4 +186,50 @@ fun TicketDetailsScreen(ticket: Ticket, onSaveImageClick: () -> Unit) {
             }
         }
     }
+}
+
+private fun saveTicketDetailsAsImage(context: Context, onSaveImageClick: (Uri) -> Unit) {
+    // Get the root view
+    val rootView = (context as Activity).window.decorView.findViewById<View>(android.R.id.content)
+
+    // Create a Bitmap of the Compose content with RGBA_F16 configuration
+    val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
+
+    val canvas = Canvas(bitmap)
+    rootView.draw(canvas)
+
+    // Save the Bitmap to the gallery
+    val imageUri = saveBitmapToGallery(context, bitmap, "ticket_details")
+
+    // Notify the caller about the saved image URI
+
+}
+
+private fun saveBitmapToGallery(context: Context, bitmap: Bitmap, displayName: String): Uri? {
+    // Define the image metadata
+    val imageDisplayName = "$displayName.png"
+    val imageDescription = "Ticket Details Image"
+    val imageMimeType = "image/png"
+    val imageRelativePath = Environment.DIRECTORY_PICTURES
+
+    // Prepare the values for the MediaStore
+    val contentValues = ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, imageDisplayName)
+        put(MediaStore.Images.Media.DESCRIPTION, imageDescription)
+        put(MediaStore.Images.Media.MIME_TYPE, imageMimeType)
+        put(MediaStore.Images.Media.RELATIVE_PATH, imageRelativePath)
+    }
+
+    // Use ContentResolver to insert the image into the MediaStore
+    val contentResolver = context.contentResolver
+    val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+    // Use OutputStream to write the bitmap data into the MediaStore entry
+    uri?.let {
+        contentResolver.openOutputStream(it)?.use { outputStream: OutputStream ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        }
+    }
+
+    return uri
 }
