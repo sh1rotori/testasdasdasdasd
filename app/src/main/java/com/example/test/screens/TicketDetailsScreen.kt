@@ -125,7 +125,7 @@ fun TicketDetailsScreen(ticket: Ticket, onSaveImageClick: () -> Unit) {
             ) {
                 // Тип билета
                 Text(
-                    text = "Тип билета: ${ticket.title}",
+                    text = "Тип билета: ${ticket.type}",
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(vertical = 8.dp)

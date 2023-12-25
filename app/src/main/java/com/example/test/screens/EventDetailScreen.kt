@@ -175,6 +175,7 @@ fun FullImageDialog(imageUrl: String?, onDismiss: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Transparent)
+
         ) {
             Image(
                 painter = painter,

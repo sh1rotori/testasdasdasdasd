@@ -1,7 +1,17 @@
 package com.example.test.navigation
 
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -9,9 +19,15 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -31,6 +47,8 @@ import com.example.test.screens.readEventsData
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.fragment.app.activityViewModels
+import com.example.test.MainActivity
+import com.example.test.R
 import com.example.test.screens.TicketDetailsScreen
 
 
@@ -138,5 +156,39 @@ fun AppNavigation() {
                 }
             }
         }
+        // Получаем контекст из Compose
+        val context = LocalContext.current
+        DisposableEffect(Unit) {
+            // Создаем ярлыки для экранов Events, Tickets, Records
+            createShortcutForScreen(context, Screens.RecordsScreen.name, "Records", Icons.Default.Send)
+            createShortcutForScreen(context, Screens.TicketsScreen.name, "Tickets", Icons.Default.MailOutline)
+            createShortcutForScreen(context, Screens.EventsScreen.name, "Events", Icons.Default.List)
+
+
+            onDispose { }
+        }
+    }
+}
+
+fun createShortcutForScreen(
+    context: Context,
+    screenName: String,
+    label: String,
+    icon: ImageVector
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+        val shortcutManager = context.getSystemService(ShortcutManager::class.java)
+
+        val shortcut = ShortcutInfo.Builder(context, screenName)
+            .setShortLabel(label)
+            .setIcon(Icon.createWithResource(context, R.mipmap.ic_launcher))
+            .setIntent(
+                Intent(context, MainActivity::class.java)
+                    .setAction(Intent.ACTION_VIEW)
+                    .putExtra("shortcut", screenName)
+            )
+            .build()
+
+        shortcutManager?.dynamicShortcuts = listOf(shortcut)
     }
 }
